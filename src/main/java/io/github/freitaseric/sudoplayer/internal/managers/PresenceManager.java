@@ -1,4 +1,4 @@
-package io.github.freitaseric.sudoplayer.managers;
+package io.github.freitaseric.sudoplayer.internal.managers;
 
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.presence.ClientActivity;
@@ -11,12 +11,7 @@ import java.util.Random;
 
 public class PresenceManager {
     private static final Random RANDOM = new Random();
-    private static final List<ClientActivity> activities = List.of(
-            ClientActivity.watching("ProtonDB"),
-            ClientActivity.listening("SteamDB"),
-            ClientActivity.playing("Borderlands 3"),
-            ClientActivity.competing("to be a pro player")
-    );
+    private static final List<ClientActivity> activities = List.of(ClientActivity.watching("ProtonDB"), ClientActivity.listening("SteamDB"), ClientActivity.playing("Borderlands 3"), ClientActivity.competing("to be a pro player"), ClientActivity.playing("Hollow Knight"));
 
     private final GatewayDiscordClient gatewayDiscordClient;
 

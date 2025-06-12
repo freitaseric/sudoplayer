@@ -1,4 +1,4 @@
-package io.github.freitaseric.sudoplayer.interfaces;
+package io.github.freitaseric.sudoplayer.internal.interfaces;
 
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
@@ -7,6 +7,10 @@ import reactor.core.publisher.Mono;
 
 public interface ICommand<T extends ApplicationCommandInteractionEvent> {
     ApplicationCommandRequest getRequest();
+
+    default String getName() {
+        return getRequest().name();
+    }
 
     Mono<Void> execute(T event);
 

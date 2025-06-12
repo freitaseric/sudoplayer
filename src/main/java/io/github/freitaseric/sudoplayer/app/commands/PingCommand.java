@@ -1,8 +1,8 @@
-package io.github.freitaseric.sudoplayer.commands;
+package io.github.freitaseric.sudoplayer.app.commands;
 
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.discordjson.json.ApplicationCommandRequest;
-import io.github.freitaseric.sudoplayer.interfaces.ICommand;
+import io.github.freitaseric.sudoplayer.internal.interfaces.ICommand;
 import reactor.core.publisher.Mono;
 
 public class PingCommand implements ICommand<ChatInputInteractionEvent> {

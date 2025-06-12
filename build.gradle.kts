@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    alias(libs.plugins.shadow)
 }
 
 group = "io.github.freitaseric.sudoplayer"
