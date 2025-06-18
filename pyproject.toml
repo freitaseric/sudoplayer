@@ -1,0 +1,14 @@
+[project]
+name = "sudoplayer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.12.13",
+    "asyncio>=3.4.3",
+    "discord-py>=2.5.2",
+    "loguru>=0.7.3",
+    "python-dotenv>=1.1.0",
+    "ruff>=0.11.13",
+]
