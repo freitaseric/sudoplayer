@@ -1,11 +1,11 @@
-from functools import singledispatch
 import aiohttp
+
+from functools import singledispatch
 from typing import Any
 
 from sudoplayer.lib.currency import get_brl_currency_values
 from sudoplayer.lib.log import logger
 
-# As URLs permanecem as mesmas
 GET_APP_LIST_URL = "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
 GET_APP_DETAIL_URL = "https://store.steampowered.com/api/appdetails?appids="
 
@@ -46,9 +46,6 @@ async def _exchange_app_price(app: dict) -> dict:
 
             new_price = int(initial_price / exchange_factor)
 
-            price_overview["initial"] = new_price
-            price_overview["final"] = new_price
-            price_overview["currency"] = "BRL"
             price_overview["final_formatted"] = f"R$ {new_price / 100:.2f}"
 
     return app
@@ -67,7 +64,7 @@ async def get_app_list() -> list[dict[str, Any]]:
                     logger.exception(f"Error fetching app list: {response.status}")
                     return []
         except aiohttp.ClientError as e:
-            logger.exception(f"AIOHTTP client error fetching app list: {e}")
+            logger.exception(f"Client error fetching app list: {e}")
             return []
 
 
@@ -95,9 +92,7 @@ async def _(appid: int) -> dict[str, Any] | None:
                     logger.exception(f"Error fetching app details: {response.status}")
                     return None
         except aiohttp.ClientError as e:
-            logger.exception(
-                f"AIOHTTP client error fetching details for appid {appid}: {e}"
-            )
+            logger.exception(f"Client error fetching details for appid {appid}: {e}")
             return None
 
 

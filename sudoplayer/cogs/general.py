@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 
@@ -13,17 +14,14 @@ class General(commands.Cog):
     @app_commands.command(description="Responde com a latência do bot.")
     @app_commands.describe()
     async def ping(self, interaction: Interaction):
-        await interaction.response.send_message(
-            embed=embeds.default("Calculando a latência..."),
-        )
         latency = round(self.bot.latency * 1000)
-        embed = embeds.default(f"Latência: `{latency}ms`")
-        await interaction.edit_original_response(embed=embed)
 
-    @ping.error
-    async def ping_error(self, interaction: Interaction, error: Exception):
         await interaction.response.send_message(
-            embed=embeds.error(error), ephemeral=True
+            embed=embeds.custom(
+                title="Pong!",
+                description=f"🏓 | A latência do bot é de **{latency}ms**.",
+                color=discord.Color.brand_green(),
+            )
         )
 
 

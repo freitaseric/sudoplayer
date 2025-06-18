@@ -6,78 +6,7 @@ import discord
 
 from sudoplayer.lib import steam
 from sudoplayer.utils import embeds
-
-
-class Paginator(discord.ui.View):
-    def __init__(self, app_list, timeout=180):
-        super().__init__(timeout=timeout)
-        self.app_list = app_list
-        self.current_page = 0
-        self.items_per_page = 10  # You can adjust this value
-        self.update_buttons()
-
-    def create_embed(self):
-        start = self.current_page * self.items_per_page
-        end = start + self.items_per_page
-        page_apps = self.app_list[start:end]
-
-        embed = discord.Embed(
-            title="Lista de Jogos do Steam",
-            description="Use `/jogo pesquisar <app_id>` ou `/jogo pesquisar <nome>` para buscar um jogo específico.",
-            color=discord.Color.blurple(),
-        )
-        for app in page_apps:
-            embed.add_field(
-                name=app["name"],
-                value=f"App ID: {app['appid']}",
-                inline=True,
-            )
-        embed.set_footer(
-            text=f"Página {self.current_page + 1}/{len(self.app_list) // self.items_per_page + 1}",
-        )
-        return embed
-
-    def update_buttons(self):
-        self.first_page.disabled = self.current_page == 0
-        self.prev_page.disabled = self.current_page == 0
-        self.next_page.disabled = self.current_page >= (
-            len(self.app_list) // self.items_per_page
-        )
-        self.last_page.disabled = self.current_page >= (
-            len(self.app_list) // self.items_per_page
-        )
-
-    @discord.ui.button(label="Primeira", style=discord.ButtonStyle.primary, emoji="⏪")
-    async def first_page(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        self.current_page = 0
-        self.update_buttons()
-        await interaction.response.edit_message(embed=self.create_embed(), view=self)
-
-    @discord.ui.button(label="Anterior", style=discord.ButtonStyle.primary, emoji="⬅️")
-    async def prev_page(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        self.current_page -= 1
-        self.update_buttons()
-        await interaction.response.edit_message(embed=self.create_embed(), view=self)
-
-    @discord.ui.button(label="Próxima", style=discord.ButtonStyle.primary, emoji="➡️")
-    async def next_page(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        self.current_page += 1
-        self.update_buttons()
-        await interaction.response.edit_message(embed=self.create_embed(), view=self)
-
-    @discord.ui.button(label="Última", style=discord.ButtonStyle.primary, emoji="⏩")
-    async def last_page(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        self.current_page = len(self.app_list) // self.items_per_page
-        self.update_buttons()
-        await interaction.response.edit_message(embed=self.create_embed(), view=self)
+from sudoplayer.views.steam_app_list import SteamAppListView
 
 
 class Steam(commands.Cog):
@@ -108,55 +37,30 @@ class Steam(commands.Cog):
 
         await interaction.response.defer(thinking=True)
 
-        if app_id is not None:
-            if not isinstance(app_id, int):
+        if app_id is None and name is None:
+            app_list = await steam.get_app_list()
+            if not app_list:
                 return await interaction.followup.send(
-                    embed=embeds.error("O ID do jogo deve ser um número inteiro."),
+                    embed=embeds.error(
+                        "Não foi possível obter a lista de jogos do Steam."
+                    ),
                 )
 
-            app_details = await steam.get_app_details(app_id)
-            if not app_details:
-                return await interaction.followup.send(
-                    embed=embeds.error(f"Jogo com ID {app_id} não encontrado."),
-                )
+            view = SteamAppListView(app_list, interaction.user.id)
+            return await interaction.followup.send(embed=view.create_embed(), view=view)
 
+        query = app_id if app_id is not None else name
+
+        app_details = await steam.get_app_details(query)
+        if not app_details:
             return await interaction.followup.send(
-                embed=self._create_game_embed(app_details)
+                embed=embeds.error(
+                    f"Não foi possível obter uma resposta para '{query}'."
+                )
             )
 
-        if name is not None:
-            if not isinstance(name, str):
-                return await interaction.followup.send(
-                    embed=embeds.error("O nome do jogo deve ser uma string."),
-                )
-
-            name = name.strip()
-            if not name:
-                return await interaction.followup.send(
-                    embed=embeds.error("O nome do jogo não pode estar vazio."),
-                )
-
-            app_details = await steam.get_app_details(name)
-            if not app_details:
-                return await interaction.followup.send(
-                    embed=embeds.error(f"Jogo com nome '{name}' não encontrado."),
-                )
-
-            return await interaction.followup.send(
-                embed=self._create_game_embed(app_details)
-            )
-
-        app_list = await steam.get_app_list()
-        if not app_list:
-            await interaction.followup.send(
-                embed=embeds.error("Não foi possível obter a lista de jogos do Steam."),
-            )
-            return
-
-        paginator = Paginator(app_list)
         return await interaction.followup.send(
-            embed=paginator.create_embed(),
-            view=paginator,
+            embed=self._create_game_embed(app_details)
         )
 
     def _create_game_embed(self, app_details: dict[str, Any]) -> discord.Embed:

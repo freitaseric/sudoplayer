@@ -1,7 +1,10 @@
-DEFAULT = 0x1E90FF  # DodgerBlue
-ERROR = 0xDC143C  # Crimson
-SUCCESS = 0x00FF7F  # SpringGreen
-WARNING = 0xFF8C00  # DarkOrange
-MAGIC = 0x8A2BE2  # BlueViolet
-WHITE = 0xFFFFF0  # Ivory
-BLACK = 0x1C1C1C  # DarkGray
+import discord
+
+
+DEFAULT = discord.Color.from_str("#1E90FF")  # DodgerBlue
+ERROR = discord.Color.from_str("#DC143C")  # Crimson
+SUCCESS = discord.Color.from_str("#00FF7F")  # SpringGreen
+WARNING = discord.Color.from_str("#FF8C00")  # DarkOrange
+MAGIC = discord.Color.from_str("#8A2BE2")  # BlueViolet
+WHITE = discord.Color.from_str("#FFFFF0")  # Ivory
+BLACK = discord.Color.from_str("#1C1C1C")  # DarkGray

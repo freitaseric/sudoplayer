@@ -2,12 +2,13 @@ import asyncio
 import contextlib
 from pathlib import Path
 
-from discord import Activity, ActivityType, Intents
+from discord import Activity, ActivityType, Intents, Status
+import discord
 from discord.ext.commands import Bot as BotBase
-from discord.ext.commands.context import Context
-from discord.ext.commands.errors import CommandError
+
 from sudoplayer.lib.log import logger
 from sudoplayer.config import env
+from sudoplayer.utils import embeds
 
 COGS_PACKAGE = "sudoplayer.cogs"
 
@@ -16,9 +17,9 @@ class Bot(BotBase):
     token = env.BOT_TOKEN
 
     def __init__(self):
-        intents = Intents.all()
+        intents = Intents.default()
 
-        super().__init__(command_prefix="!", intents=intents)
+        super().__init__(command_prefix="/", intents=intents)
 
     async def on_connect(self):
         """
@@ -26,11 +27,41 @@ class Bot(BotBase):
         """
         logger.success("Discord client connected successfully!")
         await self.change_presence(
-            activity=Activity(type=ActivityType.watching, name="/ajuda")
+            activity=Activity(type=ActivityType.playing, name="Borderlands 3"),
+            status=Status.idle,
         )
 
-    async def on_command_error(self, ctx: Context, exception: CommandError) -> None:
-        await ctx.reply("deu erro aqui irmão")
+    async def on_error(self, event_method, *args, **kwargs):
+        """
+        This method is called when an error occurs in the bot.
+        It logs the error with the event method name and arguments.
+        """
+        logger.error(f"An error occurred in {event_method}: {args} {kwargs}")
+
+        webhook_url = env.ERROR_WEBHOOK_URL
+        if not webhook_url:
+            logger.warning("ERROR_WEBHOOK_URL variable is not set in your environment")
+            return
+
+        webhook = discord.Webhook.from_url(webhook_url)
+
+        try:
+            await webhook.edit(name="SudoPlayer Errors")
+        except Exception:
+            logger.warning("Invalid to customize the webhook error report")
+
+        embed = embeds.custom(
+            title="Error Report",
+            description=f"An error occurred in `{event_method}`.",
+            color=embeds.colors.ERROR,
+        )
+        embed.add_field(name="Arguments", value=str(args), inline=False)
+        embed.add_field(name="Keyword Arguments", value=str(kwargs), inline=False)
+
+        try:
+            await webhook.send(embed=embed)
+        except Exception as e:
+            logger.error(f"Failed to send webhook: {e}")
 
     async def setup_hook(self):
         """
