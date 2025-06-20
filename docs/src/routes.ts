@@ -3,9 +3,9 @@ import HomePage from './views/HomePage.vue'
 import LoginPage from './views/LoginPage.vue'
 
 const routes: RouteRecordRaw[] = [
-  { name: 'Início', path: '/sudoplayer/', component: HomePage },
+  { name: 'Início', path: '/', component: HomePage },
 
-  { path: '/sudoplayer/login', component: LoginPage },
+  { path: '/', component: LoginPage },
 ]
 
 export const router = createRouter({
