@@ -1,0 +1,17 @@
+{
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "[python]": {
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.defaultColorDecorators": "never",
+    "gitlens.codeLens.symbolScopes": [
+      "!Module"
+    ],
+    "editor.formatOnType": true,
+    "editor.wordBasedSuggestions": "off",
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "standard"
+}

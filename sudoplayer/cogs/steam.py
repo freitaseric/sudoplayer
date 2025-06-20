@@ -1,30 +1,90 @@
-from datetime import datetime
+from datetime import datetime, time
+import json
 from typing import Any
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import app_commands
 import discord
 
 from sudoplayer.lib import steam
+from sudoplayer.lib.redis import r
+from sudoplayer.lib.log import logger
 from sudoplayer.utils import embeds
 from sudoplayer.views.steam_app_list import SteamAppListView
+
+HOUR_IN_SECONDS = 60 * 60
+
+
+async def game_search_autocomplete_name(
+    _: discord.Interaction, current: str
+) -> list[app_commands.Choice[str]]:
+    app_list_string = await r.get("steam:app_list")
+    app_list = json.loads(app_list_string) if app_list_string else None
+
+    if not app_list:
+        return [
+            app_commands.Choice(
+                name="Não foi possível encontrar a lista de apps ¯\\_(ツ)_/¯",
+                value="none",
+            )
+        ]
+
+    return [
+        app_commands.Choice(name=app.get("name"), value=app.get("appid"))
+        for app in app_list
+        if current.lower() in app.get("name", "").lower()
+    ]
+
+
+async def game_search_autocomplete_appid(
+    _: discord.Interaction, current: str
+) -> list[app_commands.Choice[str]]:
+    app_list_string = await r.get("steam:app_list")
+    app_list = json.loads(app_list_string) if app_list_string else None
+
+    if not app_list:
+        return [
+            app_commands.Choice(
+                name="Não foi possível encontrar a lista de apps ¯\\_(ツ)_/¯",
+                value="none",
+            )
+        ]
+
+    return [
+        app_commands.Choice(name=app.get("name"), value=app.get("appid"))
+        for app in app_list
+        if str(app.get("appid")).startswith(current)
+    ]
 
 
 class Steam(commands.Cog):
     bot: commands.Bot
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    jogo = app_commands.Group(
+    @tasks.loop(time=time(hour=0))
+    async def fetch_steam_apps(self):
+        app_list = await steam.get_app_list()
+        if app_list:
+            success = await r.set(
+                "steam:app_list", json.dumps(app_list), ex=24 * HOUR_IN_SECONDS
+            )
+            if not success:
+                logger.warning("Unable to set steam app list to cache.")
+            return app_list
+
+    game = app_commands.Group(
         name="jogo",
         description="Interagir com jogos do Steam",
     )
 
-    @jogo.command(
+    @game.command(
         name="pesquisar",
         description="Pesquisar jogos no Steam",
     )
     @app_commands.describe(app_id="ID do jogo no Steam", name="Nome do jogo")
+    @app_commands.autocomplete(app_id=game_search_autocomplete_appid)
+    @app_commands.autocomplete(name=game_search_autocomplete_name)
     async def game_search(
         self,
         interaction: discord.Interaction,
@@ -37,26 +97,46 @@ class Steam(commands.Cog):
 
         await interaction.response.defer(thinking=True)
 
-        if app_id is None and name is None:
-            app_list = await steam.get_app_list()
-            if not app_list:
-                return await interaction.followup.send(
-                    embed=embeds.error(
-                        "Não foi possível obter a lista de jogos do Steam."
-                    ),
-                )
+        app_list_string = await r.get("steam:app_list")
+        app_list = (
+            json.loads(app_list_string)
+            if app_list_string
+            else await self.fetch_steam_apps()
+        )
+        if not app_list:
+            return await interaction.followup.send(
+                embed=embeds.error("Não foi possível obter a lista de jogos do Steam."),
+            )
 
+        if app_id is None and name is None:
             view = SteamAppListView(app_list, interaction.user.id)
             return await interaction.followup.send(embed=view.create_embed(), view=view)
 
-        query = app_id if app_id is not None else name
+        query = None
+        if app_id is not None:
+            query = app_id
+        elif name is not None:
+            name_lower = name.lower()
+            for app in app_list:
+                if app.get("name", "").lower() == name_lower:
+                    query = app.get("appid")
+                    break
+            if query is None:
+                return await interaction.followup.send(
+                    embed=embeds.error(
+                        f"Não foi encontrado nenhum jogo chamado `{name}`."
+                    )
+                )
 
-        app_details = await steam.get_app_details(query)
+        app_details_string = await r.get(f"steam:app_details:{query}")
+        app_details = (
+            json.loads(app_details_string)
+            if app_details_string
+            else await self._fetch_steam_app_details(query)
+        )
         if not app_details:
             return await interaction.followup.send(
-                embed=embeds.error(
-                    f"Não foi possível obter uma resposta para '{query}'."
-                )
+                embed=embeds.error(f"Não foi encontrado nenhum jogo com id `{query}`.")
             )
 
         return await interaction.followup.send(
@@ -136,6 +216,16 @@ class Steam(commands.Cog):
             embed.title = "Erro ao obter detalhes do jogo"
 
         return embed
+
+    async def _fetch_steam_app_details(self, query: str | int | None):
+        app_details = await steam.get_app_details(query)
+        if app_details:
+            await r.set(
+                f"steam:app_details:{query}",
+                json.dumps(app_details),
+                ex=3 * HOUR_IN_SECONDS,
+            )
+        return app_details
 
 
 async def setup(bot: commands.Bot) -> None:
