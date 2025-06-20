@@ -1,19 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
 import routes from '../routes'
 
-const router = useRouter()
-
 const namedRoutes = computed(() => routes.filter((route) => route.name))
-
-function goToBotInvite() {
-  window.open(
-    'https://discord.com/oauth2/authorize?client_id=1381308570389315654',
-    '_blank',
-    'width=500;height=800;'
-  )
-}
 </script>
 
 <template>
@@ -24,17 +13,12 @@ function goToBotInvite() {
     </div>
     <div id="menu">
       <nav>
-        <RouterLink
-          v-for="route in namedRoutes"
-          :key="route.name"
-          :to="route.path"
-          >{{ route.name }}</RouterLink
-        >
+        <RouterLink v-for="route in namedRoutes" :key="route.name" :to="route.path">{{ route.name }}</RouterLink>
       </nav>
       <span id="separator" />
       <div id="actions">
-        <button @click="goToBotInvite">Adicione-me</button>
-        <button @click="router.push('/sudoplayer/login')">Fazer Login</button>
+        <a href="https://discord.com/oauth2/authorize?client_id=1381308570389315654" target="_blank">Adicione-me</a>
+        <RouterLink to="/login">Fazer Login</RouterLink>
       </div>
     </div>
   </header>
@@ -68,11 +52,9 @@ header {
     }
 
     span {
-      background: linear-gradient(
-        to right,
-        var(--color-accent-primary),
-        var(--color-accent-secondary)
-      );
+      background: linear-gradient(to right,
+          var(--color-accent-primary),
+          var(--color-accent-secondary));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -130,7 +112,7 @@ header {
       align-items: center;
       gap: 1rem;
 
-      button {
+      a {
         border: none;
         border-radius: 8px;
         color: var(--color-text);
@@ -143,6 +125,7 @@ header {
           border: 1px solid white;
           background-color: transparent;
         }
+
         &:nth-child(2) {
           background-color: var(--color-accent-primary);
         }
