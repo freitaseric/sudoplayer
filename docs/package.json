@@ -11,7 +11,8 @@
   "dependencies": {
     "sass-embedded": "^1.89.2",
     "vue": "^3.5.13",
-    "vue-router": "4.1"
+    "vue-router": "4.1",
+    "vue-tsc": "^2.2.8"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
@@ -24,7 +25,6 @@
     "typescript-eslint": "^8.34.1",
     "vite": "^6.3.5",
     "vite-plugin-eslint": "^1.8.1",
-    "vite-plugin-pwa": "^1.0.0",
-    "vue-tsc": "^2.2.8"
+    "vite-plugin-pwa": "^1.0.0"
   }
 }
