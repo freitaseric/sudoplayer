@@ -5,7 +5,7 @@ import LoginPage from './views/LoginPage.vue'
 const routes: RouteRecordRaw[] = [
   { name: 'Início', path: '/', component: HomePage },
 
-  { path: '/', component: LoginPage },
+  { path: '/login', component: LoginPage },
 ]
 
 export const router = createRouter({
