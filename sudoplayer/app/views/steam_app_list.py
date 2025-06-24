@@ -1,8 +1,8 @@
+from datetime import datetime
 from typing import Any
 import discord
 
-from sudoplayer.config import emojis
-from sudoplayer.utils import embeds
+from sudoplayer.core import constants
 
 
 class _GoToPageModal(discord.ui.Modal, title="Ir para página"):
@@ -26,18 +26,29 @@ class _GoToPageModal(discord.ui.Modal, title="Ir para página"):
         try:
             page_number = int(self.page.value)
         except ValueError:
+            embed = discord.Embed(
+                title=f"{constants.CANCEL} | Ops, algo deu errado...",
+                description="Por favor, insira um número válido.",
+                color=discord.Color.red(),
+                timestamp=datetime.now(),
+            )
+
             await interaction.response.send_message(
-                embed=embeds.error("Por favor, insira um número válido."),
+                embed=embed,
                 ephemeral=True,
             )
             return
 
         total_pages = len(self.app_list) // steam_app_list_view.items_per_page
         if not (0 <= page_number <= total_pages):
+            embed = discord.Embed(
+                title=f"{constants.CANCEL} | Ops, algo deu errado...",
+                description=f"Por favor, insira um número de página entre 1 e {total_pages + 1}.",
+                color=discord.Color.red(),
+                timestamp=datetime.now(),
+            )
             await interaction.response.send_message(
-                embed=embeds.error(
-                    f"Por favor, insira um número de página entre 1 e {total_pages + 1}."
-                ),
+                embed=embed,
                 ephemeral=True,
             )
             return
@@ -49,10 +60,16 @@ class _GoToPageModal(discord.ui.Modal, title="Ir para página"):
             embed=steam_app_list_view.create_embed(),
             view=steam_app_list_view,
         )
+
+        embed = discord.Embed(
+            title=f"{constants.CHECK} | Sucesso!",
+            description=f"Você foi redirecionado para a página {page_number}.",
+            color=discord.Color.brand_green(),
+            timestamp=datetime.now(),
+        )
+
         await interaction.followup.send(
-            embed=embeds.success(
-                f"Você foi redirecionado para a página {page_number}."
-            ),
+            embed=embed,
             ephemeral=True,
         )
 
@@ -81,7 +98,7 @@ class SteamAppListView(discord.ui.View):
         page_apps = self.app_list[start:end]
 
         embed = discord.Embed(
-            title=f"{emojis.STEAM} | Lista de Jogos do Steam",
+            title=f"{constants.STEAM} | Lista de Jogos do Steam",
             description=f"Foram encontrados um total de **{len(self.app_list)} jogos** no catálogo.\nUse `/jogo pesquisar <app_id>` ou `/jogo pesquisar <nome>` para buscar um jogo específico.",
             color=discord.Color.teal(),
         )

@@ -1,4 +1,5 @@
-from sudoplayer.bot import Bot
+from sudoplayer import Bot
+
 
 if __name__ == "__main__":
     bot = Bot()

@@ -1,13 +1,14 @@
+from datetime import datetime
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 
-from sudoplayer.utils import embeds
-from sudoplayer.lib.redis import r
 import time
 
+from sudoplayer.app.database import cache
 
-class General(commands.Cog):
+
+class GeneralCog(commands.Cog):
     bot: commands.Bot
 
     def __init__(self, bot):
@@ -19,20 +20,21 @@ class General(commands.Cog):
         bot_latency = round(self.bot.latency * 1000)
 
         start = time.perf_counter()
-        await r.ping()
+        await cache.ping()
         redis_latency = round((time.perf_counter() - start) * 1000)
 
         await interaction.response.send_message(
-            embed=embeds.custom(
-            title="🏓 | Pong!",
-            description=(
-                f"🤖 | A latência do **bot** é de `{bot_latency}ms`.\n"
-                f"🗄️ | A latência do **servidor cache** é de `{redis_latency}ms`."
-            ),
-            color=discord.Color.brand_green(),
+            embed=discord.Embed(
+                title="🏓 | Pong!",
+                description=(
+                    f"🤖 | A latência do **bot** é de `{bot_latency}ms`.\n"
+                    f"🗄️ | A latência do **servidor cache** é de `{redis_latency}ms`."
+                ),
+                color=discord.Color.blurple(),
+                timestamp=datetime.now(),
             )
         )
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(General(bot))
+    await bot.add_cog(GeneralCog(bot))
